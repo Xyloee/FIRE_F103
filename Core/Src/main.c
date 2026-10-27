@@ -43,7 +43,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t FlowingLight_run_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,10 +94,20 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		//press key1
+		//press key1,turn on FlowingLight
 		if(HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin) == GPIO_PIN_SET)
 		{
-			//GPIO out,flowing water lights
+			FlowingLight_run_flag = 1;
+		}
+		else if(HAL_GPIO_ReadPin(KEY2_GPIO_Port, KEY2_Pin) == GPIO_PIN_SET)
+		{
+			FlowingLight_run_flag = 0;
+			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET); //all is off
+		}
+		
+		if(FlowingLight_run_flag == 1)
+		{
+				//GPIO out,flowing water lights
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET); //red light on
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_B_Pin, GPIO_PIN_SET); //green and blue off
 			HAL_Delay(500); //delay 500ms
@@ -107,10 +117,6 @@ int main(void)
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin, GPIO_PIN_SET);
 			HAL_Delay(500);
-		}
-		else if(HAL_GPIO_ReadPin(KEY2_GPIO_Port, KEY2_Pin) == GPIO_PIN_SET)
-		{
-			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET); //all is off
 		}
     /* USER CODE END WHILE */ 
 
