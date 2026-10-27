@@ -1,0 +1,39 @@
+# ========== Keil MDK ==========
+# 编译输出目录
+Objects/
+Listings/
+Debug/
+Release/
+DebugConfig/
+
+# Keil用户界面（每个人窗口位置、断点不一样，绝对不要提交）
+*.uvguix.*
+*.uvoptx
+*.bak
+*.scvd
+
+# 编译产物
+*.o
+*.d
+*.crf
+*.lnp
+*.axf
+*.map
+*.hex
+*.bin
+*.elf
+*.dep
+*.i
+*.lst
+
+# ========== STM32CubeMX ==========
+# cubemx用户缓存
+*.ioc.user
+# cubem生成的一些临时文件
+/.cubemx/
+
+# ========== 系统、编辑器临时文件 ==========
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
