@@ -105,20 +105,29 @@ int main(void)
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET); //all is off
 		}
 		
-		if(FlowingLight_run_flag == 1)
+		if(FlowingLight_run_flag == 1) 
 		{
 				//GPIO out,flowing water lights
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET); //red light on
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_B_Pin, GPIO_PIN_SET); //green and blue off
-			HAL_Delay(500); //delay 500ms
+			HAL_Delay(100); //delay 100ms
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin | LED_B_Pin, GPIO_PIN_SET);
-			HAL_Delay(500);
+			HAL_Delay(100);
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin, GPIO_PIN_SET);
-			HAL_Delay(500);
+			HAL_Delay(100);
 		}
-    /* USER CODE END WHILE */ 
+		
+		if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_RESET)
+		{
+			HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_RESET);
+		}
+		else if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_SET)
+		{
+			HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_SET);
+		}
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }

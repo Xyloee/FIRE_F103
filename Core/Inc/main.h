@@ -67,9 +67,13 @@ void Error_Handler(void);
 #define LED_G_GPIO_Port GPIOA
 #define LED_B_Pin GPIO_PIN_3
 #define LED_B_GPIO_Port GPIOA
+#define LightSensor_D0_Pin GPIO_PIN_6
+#define LightSensor_D0_GPIO_Port GPIOA
+#define LED_PB3_Pin GPIO_PIN_3
+#define LED_PB3_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+extern uint8_t FlowingLight_run_flag;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
