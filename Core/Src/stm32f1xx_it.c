@@ -183,12 +183,17 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-	static uint16_t count = 0;
-	count++;
-	if(count >= 5000) //5s
+	if(timer_en == 1)
 	{
-		FlowingLight_run_flag = 0;
+		count++;
+		if(count >= 5000) //5s,so is one-time use.Set every 1 millisecond.
+		{
+			FlowingLight_run_flag = 0;
+			count = 0;
+			timer_en = 0;
+		}
 	}
+	
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */

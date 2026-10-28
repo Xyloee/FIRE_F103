@@ -44,6 +44,8 @@
 
 /* USER CODE BEGIN PV */
 uint8_t FlowingLight_run_flag = 0;
+uint16_t count = 0; //time counts for flowing_light running.
+uint8_t timer_en = 0; //systimer
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,11 +100,14 @@ int main(void)
 		if(HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin) == GPIO_PIN_SET)
 		{
 			FlowingLight_run_flag = 1;
+			count = 0;
+			timer_en = 1;
 		}
 		else if(HAL_GPIO_ReadPin(KEY2_GPIO_Port, KEY2_Pin) == GPIO_PIN_SET)
 		{
 			FlowingLight_run_flag = 0;
 			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET); //all is off
+			timer_en = 0;
 		}
 		
 		if(FlowingLight_run_flag == 1) 

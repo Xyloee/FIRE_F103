@@ -74,6 +74,8 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 extern uint8_t FlowingLight_run_flag;
+extern uint16_t count;
+extern uint8_t timer_en;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
