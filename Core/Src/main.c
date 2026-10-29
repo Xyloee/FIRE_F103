@@ -46,6 +46,8 @@
 uint8_t FlowingLight_run_flag = 0;
 uint16_t count = 0; //time counts for flowing_light running.
 uint8_t timer_en = 0; //systimer
+uint8_t key_flag = 0x00;
+uint8_t LightSensor_flag= 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,17 +99,28 @@ int main(void)
   while (1)
   {
 		//press key1,turn on FlowingLight
-		if(HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin) == GPIO_PIN_SET)
+//		if(HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin) == GPIO_PIN_SET)
+//		{
+//			FlowingLight_run_flag = 1;
+//			count = 0;
+//			timer_en = 1;
+//		}
+//		else if(HAL_GPIO_ReadPin(KEY2_GPIO_Port, KEY2_Pin) == GPIO_PIN_SET)
+//		{
+//			FlowingLight_run_flag = 0;
+//			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET); //all is off
+//			timer_en = 0;
+//		}
+		if(key_flag & (1 << 1) )
 		{
-			FlowingLight_run_flag = 1;
-			count = 0;
-			timer_en = 1;
-		}
-		else if(HAL_GPIO_ReadPin(KEY2_GPIO_Port, KEY2_Pin) == GPIO_PIN_SET)
-		{
-			FlowingLight_run_flag = 0;
-			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET); //all is off
-			timer_en = 0;
+			HAL_Delay(5); 
+			if(HAL_GPIO_ReadPin(KEY2_GPIO_Port, KEY2_Pin) == GPIO_PIN_SET)//eliminate shaking
+			{
+				FlowingLight_run_flag = 0;
+				HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET); //all is off
+				timer_en = 0;
+			}
+			key_flag &= ~(1 << 1);
 		}
 		
 		if(FlowingLight_run_flag == 1) 
@@ -124,14 +137,26 @@ int main(void)
 			HAL_Delay(100);
 		}
 		
-		if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_RESET)
-		{
-			HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_RESET);
+		if(LightSensor_flag == 1){
+			if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_RESET)
+			{
+				HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_RESET);
+			}
+			else if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_SET)
+			{
+				HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_SET);
+			}	
+			LightSensor_flag = 0;
 		}
-		else if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_SET)
-		{
-			HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_SET);
-		}
+		
+//		if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_RESET)
+//		{
+//			HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_RESET);
+//		}
+//		else if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_SET)
+//		{
+//			HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_SET);
+//		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -179,6 +204,24 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == KEY2_Pin){
+			key_flag |= (1 << 1); // 0000 0010
+	}
+	else if(GPIO_Pin == KEY1_Pin){
+			FlowingLight_run_flag = 1;
+			count = 0;
+			timer_en = 1;
+	}
+	else if(GPIO_Pin == LightSensor_D0_Pin){
+		LightSensor_flag = 1;
+		HAL_GPIO_TogglePin(LED_R_GPIO_Port, LED_R_Pin);
+	}
+	
+}
+
 
 /* USER CODE END 4 */
 
