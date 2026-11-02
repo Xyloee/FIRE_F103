@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -34,7 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LENGTH 10
+#define LENGTH 64
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,7 +53,8 @@ uint16_t count = 0; //time counts for flowing_light running.
 uint8_t timer_en = 0; //systimer
 uint8_t key_flag = 0x00;
 uint8_t LightSensor_flag= 0;
-uint8_t RxBuff[LENGTH] = {0};
+uint8_t RxBuff1[LENGTH] = {0};
+uint8_t RxBuff2[LENGTH] = {0};
 uint8_t RxCount = 0;
 uint8_t LightOn_Flag = 0;
 uint8_t cmd_ready_flag = 0;
@@ -61,7 +63,7 @@ uint8_t cmd_ready_flag = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void USART_SendString(UART_HandleTypeDef *huart, char *str);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -98,14 +100,17 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	uint8_t ch = 'F';
 	char msg[]="Hello,world!\r\n";
 	uint8_t recvBuf[2];
 	
-	printf("已开启接收中断,等待数据\r\n");
-	HAL_UART_Receive_IT(&huart1 ,RxBuff, 1);
+	printf("已开启接收中断,等待数据\n");
+	HAL_UARTEx_ReceiveToIdle_IT(&huart1 ,RxBuff1, LENGTH);
+	HAL_UARTEx_ReceiveToIdle_IT(&huart3 ,RxBuff2, LENGTH);
 //	HAL_UART_Receive_IT(&huart1 ,RxBuff,LENGTH);
   /* USER CODE END 2 */
 
@@ -113,44 +118,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		//press key1,turn on FlowingLight
-//		if(HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin) == GPIO_PIN_SET)
-//		{
-//			FlowingLight_run_flag = 1;
-//			count = 0;
-//			timer_en = 1;
-//		}
-//		else if(HAL_GPIO_ReadPin(KEY2_GPIO_Port, KEY2_Pin) == GPIO_PIN_SET)
-//		{
-//			FlowingLight_run_flag = 0;
-//			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET); //all is off
-//			timer_en = 0;
-//		}
-		
-//		HAL_UART_Transmit(&huart1, &ch, 1, HAL_MAX_DELAY); //send a byte.
-//		HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY); 
-//		printf("你好呀！今天天气真好！\r\n");
-//		
-//		if(HAL_UART_Receive(&huart1 ,recvBuf,2,10) == HAL_OK){
-//				printf("byte0=%c, byte1=%d\r\n", recvBuf[0], recvBuf[1]);//'2''3' byte0=2, byte1=51(ASCII) 23
-//				HAL_UART_Transmit(&huart1, recvBuf, 2, HAL_MAX_DELAY); 
-//		}
-
-	if(cmd_ready_flag == 1)
-	{
-		cmd_ready_flag = 0;
-		if(strcmp((char*)RxBuff, "on") == 0)
-		{
-			LightOn_Flag = 1;
-			printf("收到on，开灯\r\n");
-		}
-		else if(strcmp((char*)RxBuff, "off") == 0)
-		{
-			LightOn_Flag = 0;
-			printf("收到off，关灯\r\n");
-		}
-		memset(RxBuff, 0, sizeof(RxBuff));
-	}
 		
 		if(key_flag & (1 << 1) )
 		{
@@ -196,14 +163,6 @@ int main(void)
 			LightSensor_flag = 0;
 		}
 		
-//		if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_RESET)
-//		{
-//			HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_RESET);
-//		}
-//		else if(HAL_GPIO_ReadPin(LightSensor_D0_GPIO_Port, LightSensor_D0_Pin) == GPIO_PIN_SET)
-//		{
-//			HAL_GPIO_WritePin(LED_PB3_GPIO_Port, LED_PB3_Pin, GPIO_PIN_SET);
-//		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -269,59 +228,40 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	
 }
 
-int fputc(int ch, FILE *f)
-{
-	HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-	return ch;
-}
+//int fputc(int ch, FILE *f)
+//{
+//	HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+//	return ch;
+//}
 
+void USART_SendString(UART_HandleTypeDef *huart, char *str)
+{
+	while(*str){ //not '\0'
+		HAL_UART_Transmit(huart, (uint8_t *)str, 1, HAL_MAX_DELAY);
+		str++;
+	}
+}
 /**
   * @brief  Rx Transfer completed callbacks.
   * @param  huart  Pointer to a UART_HandleTypeDef structure that contains
   *                the configuration information for the specified UART module.
   * @retval None
   */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
 	
 	if(huart -> Instance == USART1){
-//		RxCount++;
-		if(RxBuff[RxCount] == '\r')
-        {
-            HAL_UART_Receive_IT(&huart1, &RxBuff[RxCount], 1);
-            return;
-        }
-        if(RxBuff[RxCount] == '\n')
-        {
-            RxBuff[RxCount] = '\0';
-            cmd_ready_flag = 1;
-            RxCount = 0;
-        }
-        else
-        {
-            RxCount++;
-            if(RxCount >= LENGTH)
-            {
-                memset(RxBuff,0,sizeof(RxBuff));
-                RxCount = 0;
-            }
-        }
-//		if(RxCount == 2 && strncmp((char *)RxBuff, "on", 2) == 0){
-//			LightOn_Flag = 1;
-//			memset(RxBuff, 0 ,sizeof(RxBuff));
-//			RxCount = 0;
-//		}
-//		else if(RxCount == 3 && strncmp((char *)RxBuff, "off", 3) == 0){
-//			LightOn_Flag = 0;
-//			HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_G_Pin | LED_R_Pin | LED_B_Pin, GPIO_PIN_SET);
-//			memset(RxBuff, 0 ,sizeof(RxBuff));
-//			RxCount = 0;
-//		}
-		HAL_UART_Receive_IT(&huart1, &RxBuff[RxCount], 1);
-////		printf("已接收到数据。数据回显如下：\r\n");
-//		HAL_UART_Transmit_IT(&huart1 ,RxBuff,LENGTH);
-////		printf("\r\n再次开启接收中断.\r\n");
-//		HAL_UART_Receive_IT(&huart1 ,RxBuff,LENGTH);
+		USART_SendString(&huart1,"usart1收到数据，转发usart2\r\n");
+		HAL_UART_Transmit_IT(&huart3, RxBuff1, Size);
+		HAL_UART_Transmit_IT(&huart1, RxBuff1, Size);
+		HAL_UARTEx_ReceiveToIdle_IT(&huart1 ,RxBuff1, LENGTH);
+
+	}
+	else if(huart -> Instance == USART3){
+		USART_SendString(&huart1,"usart2收到数据，转发usart1\r\n");
+		HAL_UART_Transmit_IT(&huart1, RxBuff2, Size);
+		HAL_UART_Transmit_IT(&huart3, RxBuff2, Size);
+		HAL_UARTEx_ReceiveToIdle_IT(&huart3 ,RxBuff2, LENGTH);
 	}
 }
 /* USER CODE END 4 */
